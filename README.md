@@ -13,13 +13,15 @@ Express
 - Registrar treino (POST /treinos)
 - Listar treinos (GET /treinos)
 - Deletar treino (DELETE /treinos/:id)
-- (IDs gerados aleatoriamente, não seguindo sequência por exemplo 1,2,3...)
+- (IDs gerados em sequência sendo (AUTO_INCREMENT PRIMARY KEY).
 
 ## Como rodar o projeto
 1. Instalar dependências:
 npm install
+
 2. Iniciar o servidor:
 node server.js
+
 3. A API estará disponível em:
 http://localhost:3000
 
