@@ -28,9 +28,10 @@ server.js → lógica da API
 treinos.json → armazenamento dos dados  
 package.json → configuração do projeto
 
-##
+## BackEnd
 Backend desenvolvido em Node.js com Express e MySQL, os Endpoints são criados usando a extensão (Thunder Client no VsCode).
 Endpoints disponíveis:
+
 GET /treinos
 POST /treinos
 DELETE /treinos/:id
