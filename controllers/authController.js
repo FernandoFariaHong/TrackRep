@@ -12,12 +12,16 @@ const register = async (req, res) => {
     return res.status(400).json({ erro: 'Preencha todos os campos' });
   }
 
+  // Padroniza os dados antes de salvar no banco
+  const nomeFormatado = nome.trim();
+  const emailFormatado = email.trim().toLowerCase();
+
   try {
     const senhaCriptografada = await bcrypt.hash(senha, 10);
 
     db.query(
       'INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)',
-      [nome, email, senhaCriptografada],
+      [nomeFormatado, emailFormatado, senhaCriptografada],
       (err, result) => {
         if (err) {
           console.error(err);
@@ -40,9 +44,12 @@ const login = (req, res) => {
     return res.status(400).json({ erro: 'Preencha todos os campos' });
   }
 
+  // Converte o email para minúsculo antes de buscar no banco
+  const emailFormatado = email.trim().toLowerCase();
+
   db.query(
     'SELECT * FROM usuarios WHERE email = ?',
-    [email],
+    [emailFormatado],
     async (err, results) => {
       if (err) {
         console.error(err);
