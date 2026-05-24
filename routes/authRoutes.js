@@ -1,13 +1,29 @@
 const express = require('express');
 const router = express.Router();
 
-// Importação do registro e login
-const { register, login } = require('../controllers/authController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-// Rota do cadastro
+const {
+  register,
+  login,
+  excluirConta,
+  buscarExerciciosExternos
+} = require('../controllers/authController');
+
+// Cadastro
 router.post('/register', register);
 
-// Rota do login
+// Login
 router.post('/login', login);
+
+// Buscar exercícios em API externa
+router.get('/api/exercicios', authMiddleware, buscarExerciciosExternos);
+
+// Excluir conta
+router.delete(
+  '/usuarios/minha-conta',
+  authMiddleware,
+  excluirConta
+);
 
 module.exports = router;

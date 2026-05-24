@@ -12,7 +12,6 @@ const register = async (req, res) => {
     return res.status(400).json({ erro: 'Preencha todos os campos' });
   }
 
-  // Padroniza os dados antes de salvar no banco
   const nomeFormatado = nome.trim();
   const emailFormatado = email.trim().toLowerCase();
 
@@ -22,13 +21,24 @@ const register = async (req, res) => {
     db.query(
       'INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)',
       [nomeFormatado, emailFormatado, senhaCriptografada],
-      (err, result) => {
+      (err) => {
         if (err) {
           console.error(err);
-          return res.status(500).json({ erro: 'Erro ao cadastrar usuário' });
+
+          if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({
+              erro: 'Este e-mail já está cadastrado'
+            });
+          }
+
+          return res.status(500).json({
+            erro: 'Erro ao cadastrar usuário'
+          });
         }
 
-        res.status(201).json({ mensagem: 'Usuário cadastrado com sucesso' });
+        res.status(201).json({
+          mensagem: 'Usuário cadastrado com sucesso'
+        });
       }
     );
   } catch (error) {
@@ -44,7 +54,6 @@ const login = (req, res) => {
     return res.status(400).json({ erro: 'Preencha todos os campos' });
   }
 
-  // Converte o email para minúsculo antes de buscar no banco
   const emailFormatado = email.trim().toLowerCase();
 
   db.query(
@@ -69,17 +78,191 @@ const login = (req, res) => {
       }
 
       const token = jwt.sign(
-        { id: usuario.id, email: usuario.email },
+        {
+          id: usuario.id,
+          email: usuario.email
+        },
         SECRET,
-        { expiresIn: '1h' }
+        {
+          expiresIn: '1h'
+        }
       );
 
       res.json({
         mensagem: 'Login realizado com sucesso',
-        token
+        token,
+        usuario: {
+          id: usuario.id,
+          nome: usuario.nome,
+          email: usuario.email
+        }
       });
     }
   );
 };
 
-module.exports = { register, login };
+// Buscar exercícios em API externa
+const buscarExerciciosExternos = async (req, res) => {
+  const { busca } = req.query;
+
+  if (!busca || !busca.trim()) {
+    return res.status(400).json({
+      erro: 'Informe o nome do exercício'
+    });
+  }
+
+  try {
+    const response = await fetch(
+      `https://wger.de/api/v2/exerciseinfo/?language=2&limit=50&term=${encodeURIComponent(busca)}`
+    );
+
+    if (!response.ok) {
+      return res.status(502).json({
+        erro: 'Erro na resposta da API externa'
+      });
+    }
+
+    const data = await response.json();
+    const termo = busca.trim().toLowerCase();
+
+    const resultados = (data.results || [])
+      .map((exercicio) => {
+       const traducaoIngles =
+  exercicio.translations?.find((t) => t.language === 2) || null;
+
+const traducaoComNome =
+  traducaoIngles ||
+  exercicio.translations?.find((t) => t.name) ||
+  null;
+
+const traducaoComDescricao =
+  traducaoIngles ||
+  exercicio.translations?.find((t) => t.description) ||
+  null;
+
+        const nome =
+          traducaoComNome?.name ||
+          'Nome não informado';
+
+        const descricao =
+          traducaoComDescricao?.description
+            ? traducaoComDescricao.description.replace(/<[^>]*>?/gm, '')
+            : 'Sem descrição disponível.';
+
+        const categoria =
+          {
+            Cardio: 'Cardio',
+            Legs: 'Pernas',
+            Chest: 'Peito',
+            Back: 'Costas',
+            Shoulders: 'Ombros',
+            Arms: 'Braços',
+            Abs: 'Abdômen',
+            Calves: 'Panturrilhas'
+          }[exercicio.category?.name] ||
+          exercicio.category?.name ||
+          'Não informada';
+
+        const musculos =
+          exercicio.muscles
+            ?.map(
+              (musculo) =>
+                ({
+                  'Quadriceps femoris': 'Quadríceps',
+                  'Pectoralis major': 'Peitoral maior',
+                  'Anterior deltoid': 'Deltoide anterior',
+                  Biceps: 'Bíceps',
+                  Triceps: 'Tríceps',
+                  'Latissimus dorsi': 'Dorsal',
+                  Glutes: 'Glúteos',
+                  Hamstrings: 'Posterior de coxa',
+                  Gastrocnemius: 'Panturrilha',
+                  Abdominals: 'Abdômen'
+                }[musculo.name] || musculo.name)
+            )
+            .join(', ') || 'Não informado';
+
+        const imagem =
+          exercicio.images?.find((img) => img.image)?.image ||
+          exercicio.images?.[0]?.image ||
+          null;
+
+        return {
+          id: exercicio.id,
+          nome,
+          descricao,
+          categoria,
+          musculos,
+          imagem
+        };
+      })
+      .filter((exercicio) => {
+        return (
+          exercicio.nome.toLowerCase().includes(termo) ||
+          exercicio.descricao.toLowerCase().includes(termo) ||
+          exercicio.categoria.toLowerCase().includes(termo) ||
+          exercicio.musculos.toLowerCase().includes(termo)
+        );
+      });
+
+    res.json({
+      fonte: 'API externa wger',
+      total: resultados.length,
+      resultados
+    });
+  } catch (error) {
+    console.error(error);
+
+   res.status(500).json({
+  erro: 'A API externa demorou para responder. Tente novamente em alguns segundos.'
+});
+  }
+};
+
+// Excluir conta e todos os treinos do usuário
+const excluirConta = (req, res) => {
+  const usuarioId = req.user.id;
+
+  db.query(
+    'DELETE FROM treinos WHERE usuario_id = ?',
+    [usuarioId],
+    (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({
+          erro: 'Erro ao excluir treinos do usuário'
+        });
+      }
+
+      db.query(
+        'DELETE FROM usuarios WHERE id = ?',
+        [usuarioId],
+        (err, result) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({
+              erro: 'Erro ao excluir conta'
+            });
+          }
+
+          if (result.affectedRows === 0) {
+            return res.status(404).json({
+              erro: 'Usuário não encontrado'
+            });
+          }
+
+          res.json({
+            mensagem: 'Conta e treinos excluídos com sucesso'
+          });
+        }
+      );
+    }
+  );
+};
+
+module.exports = {
+  register,
+  login,
+  excluirConta,
+  buscarExerciciosExternos
+};
