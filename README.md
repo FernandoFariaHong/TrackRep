@@ -1,45 +1,194 @@
 # TrackRep API
-Primeira funcionalidade do sistema TrackRep.
+
+API REST do sistema TrackRep, desenvolvida para gerenciamento e acompanhamento de treinos de musculação.
 
 ## Descrição
-Esta API permite registrar treinos de musculação, armazenando informações como exercício, carga, repetições, séries e data.
 
+O TrackRep é um sistema desenvolvido como Trabalho de Conclusão de Curso (TCC) do curso de Sistemas de Informação.
 
-## Tecnologias
-Node.js
-Express
+A API é responsável por:
 
-## Funcionalidades implementadas
-- Registrar treino (POST /treinos)
-- Listar treinos (GET /treinos)
-- Deletar treino (DELETE /treinos/:id)
-- (IDs gerados em sequência sendo (AUTO_INCREMENT PRIMARY KEY).
+- Cadastro e autenticação de usuários
+- Gerenciamento de sessões de treino
+- Armazenamento de medidas corporais
+- Estatísticas de treinamento
+- Integração com API externa de exercícios (Wger)
+- Controle de acesso utilizando JWT
 
-## Como rodar o projeto
-1. Instalar dependências:
+---
+
+## Tecnologias Utilizadas
+
+### Backend
+
+- Node.js
+- Express.js
+- MySQL
+- JWT (JSON Web Token)
+- bcrypt
+- CORS
+
+### Banco de Dados
+
+- MySQL
+
+---
+
+## Funcionalidades Implementadas
+
+### Usuários
+
+- Cadastro de usuário
+- Login de usuário
+- Criptografia de senha com bcrypt
+- Exclusão de conta
+- Alteração de senha
+- Perfil do usuário
+
+### Perfil
+
+- Altura
+- Peso
+- Peito
+- Cintura
+- Braço
+- Coxa
+- Panturrilha
+
+### Treinos
+
+- Criação de sessões de treino
+- Cadastro de múltiplos exercícios
+- Cadastro de múltiplas séries por exercício
+- Cálculo automático de volume total
+- Histórico de treinos
+- Exclusão de treinos
+
+### Dashboard
+
+- Quantidade de treinos realizados
+- Volume total levantado
+- Sequência de treinos
+- Histórico recente
+
+### API Externa
+
+Integração com a API Wger para consulta de exercícios de musculação.
+
+---
+
+## Rotas Principais
+
+### Autenticação
+
+| Método | Rota | Descrição |
+|----------|----------|----------|
+| POST | /register | Cadastro |
+| POST | /login | Login |
+| DELETE | /usuarios/minha-conta | Excluir conta |
+
+---
+
+### Perfil
+
+| Método | Rota | Descrição |
+|----------|----------|----------|
+| GET | /perfil | Buscar perfil |
+| PUT | /perfil | Atualizar perfil |
+
+---
+
+### Treinos
+
+| Método | Rota | Descrição |
+|----------|----------|----------|
+| GET | /treinos/sessoes | Listar treinos |
+| POST | /treinos/sessao | Salvar treino |
+| DELETE | /treinos/sessoes/:id | Excluir treino |
+
+---
+
+### API Externa
+
+| Método | Rota | Descrição |
+|----------|----------|----------|
+| GET | /api/exercicios | Buscar exercícios na API Wger |
+
+---
+
+## Segurança
+
+- Senhas armazenadas utilizando bcrypt
+- Autenticação via JWT
+- Rotas protegidas por middleware de autenticação
+
+---
+
+## Como Executar
+
+### Instalar dependências
+
+```bash
 npm install
+```
 
-2. Iniciar o servidor:
+### Iniciar servidor
+
+```bash
 node server.js
+```
 
-3. A API estará disponível em:
+ou
+
+```bash
+npm start
+```
+
+### Servidor
+
+```bash
 http://localhost:3000
+```
 
-## Estrutura do projeto
-server.js → lógica da API  
-treinos.json → armazenamento dos dados  
-package.json → configuração do projeto
+---
 
-## BackEnd
-Backend desenvolvido em Node.js com Express e MySQL, os Endpoints são criados usando a extensão (Thunder Client no VsCode).
+## Estrutura do Projeto
 
-Endpoints disponíveis:
+```text
+TrackRep API
+│
+├── config
+│   └── db.js
+│
+├── controllers
+│   ├── authController.js
+│   └── treinosController.js
+│
+├── middlewares
+│   └── authMiddleware.js
+│
+├── routes
+│   ├── authRoutes.js
+│   └── treinosRoutes.js
+│
+├── server.js
+└── package.json
+```
 
-GET /treinos
-POST /treinos
-DELETE /treinos/:id
-
-O banco pode ser recriado executando o script database.sql.
+---
 
 ## Autor
+
 Fernando Faria Hong
+
+## Orientador
+
+Alessandro Aparecido da Silva Horas
+
+## Projeto Acadêmico
+
+Trabalho de Conclusão de Curso (TCC)
+
+Curso: Sistemas de Informação
+
+Universidade de Mogi das Cruzes (UMC)
