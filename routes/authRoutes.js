@@ -6,6 +6,9 @@ const authMiddleware = require('../middlewares/authMiddleware');
 const {
   register,
   login,
+  buscarPerfil,
+  atualizarPerfil,
+  alterarSenha,
   excluirConta,
   buscarExerciciosExternos
 } = require('../controllers/authController');
@@ -16,8 +19,21 @@ router.post('/register', register);
 // Login
 router.post('/login', login);
 
+// Buscar perfil do usuário
+router.get('/perfil', authMiddleware, buscarPerfil);
+
+// Atualizar perfil do usuário
+router.put('/perfil', authMiddleware, atualizarPerfil);
+
 // Buscar exercícios em API externa
 router.get('/api/exercicios', authMiddleware, buscarExerciciosExternos);
+
+// Alterar senha do usuário
+router.put(
+  '/usuarios/alterar-senha',
+  authMiddleware,
+  alterarSenha
+);
 
 // Excluir conta
 router.delete(

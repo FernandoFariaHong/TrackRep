@@ -101,6 +101,93 @@ const login = (req, res) => {
   );
 };
 
+// Buscar perfil do usuário
+const buscarPerfil = (req, res) => {
+  const usuarioId = req.user.id;
+
+  db.query(
+    `SELECT
+      nome,
+      email,
+      altura,
+      peso,
+      peito,
+      cintura,
+      braco,
+      coxa,
+      panturrilha
+     FROM usuarios
+     WHERE id = ?`,
+    [usuarioId],
+    (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({
+          erro: 'Erro ao buscar perfil'
+        });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({
+          erro: 'Usuário não encontrado'
+        });
+      }
+
+      res.json(results[0]);
+    }
+  );
+};
+
+// Atualizar perfil do usuário
+const atualizarPerfil = (req, res) => {
+  const usuarioId = req.user.id;
+
+  const {
+    altura,
+    peso,
+    peito,
+    cintura,
+    braco,
+    coxa,
+    panturrilha
+  } = req.body;
+
+  db.query(
+    `UPDATE usuarios
+     SET
+      altura = ?,
+      peso = ?,
+      peito = ?,
+      cintura = ?,
+      braco = ?,
+      coxa = ?,
+      panturrilha = ?
+     WHERE id = ?`,
+    [
+      altura || null,
+      peso || null,
+      peito || null,
+      cintura || null,
+      braco || null,
+      coxa || null,
+      panturrilha || null,
+      usuarioId
+    ],
+    (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({
+          erro: 'Erro ao atualizar perfil'
+        });
+      }
+
+      res.json({
+        mensagem: 'Perfil atualizado com sucesso'
+      });
+    }
+  );
+};
+
 // Buscar exercícios em API externa
 const buscarExerciciosExternos = async (req, res) => {
   const { busca } = req.query;
@@ -127,18 +214,18 @@ const buscarExerciciosExternos = async (req, res) => {
 
     const resultados = (data.results || [])
       .map((exercicio) => {
-       const traducaoIngles =
-  exercicio.translations?.find((t) => t.language === 2) || null;
+        const traducaoIngles =
+          exercicio.translations?.find((t) => t.language === 2) || null;
 
-const traducaoComNome =
-  traducaoIngles ||
-  exercicio.translations?.find((t) => t.name) ||
-  null;
+        const traducaoComNome =
+          traducaoIngles ||
+          exercicio.translations?.find((t) => t.name) ||
+          null;
 
-const traducaoComDescricao =
-  traducaoIngles ||
-  exercicio.translations?.find((t) => t.description) ||
-  null;
+        const traducaoComDescricao =
+          traducaoIngles ||
+          exercicio.translations?.find((t) => t.description) ||
+          null;
 
         const nome =
           traducaoComNome?.name ||
@@ -213,9 +300,9 @@ const traducaoComDescricao =
   } catch (error) {
     console.error(error);
 
-   res.status(500).json({
-  erro: 'A API externa demorou para responder. Tente novamente em alguns segundos.'
-});
+    res.status(500).json({
+      erro: 'A API externa demorou para responder. Tente novamente em alguns segundos.'
+    });
   }
 };
 
@@ -260,9 +347,55 @@ const excluirConta = (req, res) => {
   );
 };
 
+// Alterar senha do usuário
+const alterarSenha = async (req, res) => {
+  const usuarioId = req.user.id;
+  const { novaSenha } = req.body;
+
+  if (!novaSenha) {
+    return res.status(400).json({
+      erro: 'Informe a nova senha'
+    });
+  }
+
+  try {
+    const senhaCriptografada = await bcrypt.hash(novaSenha, 10);
+
+    db.query(
+      'UPDATE usuarios SET senha = ? WHERE id = ?',
+      [senhaCriptografada, usuarioId],
+      (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({
+            erro: 'Erro ao alterar senha'
+          });
+        }
+
+        if (result.affectedRows === 0) {
+          return res.status(404).json({
+            erro: 'Usuário não encontrado'
+          });
+        }
+
+        res.json({
+          mensagem: 'Senha alterada com sucesso'
+        });
+      }
+    );
+  } catch (error) {
+    res.status(500).json({
+      erro: 'Erro interno ao alterar senha'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
+  buscarPerfil,
+  atualizarPerfil,
+  alterarSenha,
   excluirConta,
   buscarExerciciosExternos
 };
