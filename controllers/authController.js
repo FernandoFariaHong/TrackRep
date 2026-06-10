@@ -94,7 +94,8 @@ const login = (req, res) => {
         usuario: {
           id: usuario.id,
           nome: usuario.nome,
-          email: usuario.email
+          email: usuario.email,
+          is_admin: usuario.is_admin
         }
       });
     }
@@ -227,9 +228,7 @@ const buscarExerciciosExternos = async (req, res) => {
           exercicio.translations?.find((t) => t.description) ||
           null;
 
-        const nome =
-          traducaoComNome?.name ||
-          'Nome não informado';
+        const nome = traducaoComNome?.name || 'Nome não informado';
 
         const descricao =
           traducaoComDescricao?.description
@@ -254,18 +253,18 @@ const buscarExerciciosExternos = async (req, res) => {
           exercicio.muscles
             ?.map(
               (musculo) =>
-                ({
-                  'Quadriceps femoris': 'Quadríceps',
-                  'Pectoralis major': 'Peitoral maior',
-                  'Anterior deltoid': 'Deltoide anterior',
-                  Biceps: 'Bíceps',
-                  Triceps: 'Tríceps',
-                  'Latissimus dorsi': 'Dorsal',
-                  Glutes: 'Glúteos',
-                  Hamstrings: 'Posterior de coxa',
-                  Gastrocnemius: 'Panturrilha',
-                  Abdominals: 'Abdômen'
-                }[musculo.name] || musculo.name)
+              ({
+                'Quadriceps femoris': 'Quadríceps',
+                'Pectoralis major': 'Peitoral maior',
+                'Anterior deltoid': 'Deltoide anterior',
+                Biceps: 'Bíceps',
+                Triceps: 'Tríceps',
+                'Latissimus dorsi': 'Dorsal',
+                Glutes: 'Glúteos',
+                Hamstrings: 'Posterior de coxa',
+                Gastrocnemius: 'Panturrilha',
+                Abdominals: 'Abdômen'
+              }[musculo.name] || musculo.name)
             )
             .join(', ') || 'Não informado';
 
@@ -306,41 +305,78 @@ const buscarExerciciosExternos = async (req, res) => {
   }
 };
 
-// Excluir conta e todos os treinos do usuário
+// Excluir conta e todos os dados do usuário
 const excluirConta = (req, res) => {
   const usuarioId = req.user.id;
 
   db.query(
-    'DELETE FROM treinos WHERE usuario_id = ?',
+    "SELECT is_admin FROM usuarios WHERE id = ?",
     [usuarioId],
-    (err) => {
+    (err, results) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({
-          erro: 'Erro ao excluir treinos do usuário'
+        return res.status(500).json({ erro: "Erro ao verificar usuário" });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ erro: "Usuário não encontrado" });
+      }
+
+      if (Number(results[0].is_admin) === 1) {
+        return res.status(403).json({
+          erro: "Administradores não podem excluir a própria conta."
         });
       }
 
       db.query(
-        'DELETE FROM usuarios WHERE id = ?',
+        "DELETE FROM series_treino WHERE sessao_id IN (SELECT id FROM sessoes_treino WHERE usuario_id = ?)",
         [usuarioId],
-        (err, result) => {
+        (err) => {
           if (err) {
             console.error(err);
-            return res.status(500).json({
-              erro: 'Erro ao excluir conta'
-            });
+            return res.status(500).json({ erro: "Erro ao excluir séries do usuário" });
           }
 
-          if (result.affectedRows === 0) {
-            return res.status(404).json({
-              erro: 'Usuário não encontrado'
-            });
-          }
+          db.query(
+            "DELETE FROM sessoes_treino WHERE usuario_id = ?",
+            [usuarioId],
+            (err2) => {
+              if (err2) {
+                console.error(err2);
+                return res.status(500).json({ erro: "Erro ao excluir sessões do usuário" });
+              }
 
-          res.json({
-            mensagem: 'Conta e treinos excluídos com sucesso'
-          });
+              db.query(
+                "DELETE FROM treinos WHERE usuario_id = ?",
+                [usuarioId],
+                (err3) => {
+                  if (err3) {
+                    console.error(err3);
+                    return res.status(500).json({ erro: "Erro ao excluir treinos do usuário" });
+                  }
+
+                  db.query(
+                    "DELETE FROM usuarios WHERE id = ?",
+                    [usuarioId],
+                    (err4, result) => {
+                      if (err4) {
+                        console.error(err4);
+                        return res.status(500).json({ erro: "Erro ao excluir conta" });
+                      }
+
+                      if (result.affectedRows === 0) {
+                        return res.status(404).json({ erro: "Usuário não encontrado" });
+                      }
+
+                      res.json({
+                        mensagem: "Conta e todos os dados vinculados foram excluídos com sucesso"
+                      });
+                    }
+                  );
+                }
+              );
+            }
+          );
         }
       );
     }
