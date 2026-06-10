@@ -425,6 +425,61 @@ const alterarSenha = async (req, res) => {
     });
   }
 };
+const alterarEmail = (req, res) => {
+  const usuarioId = req.user.id;
+  const { novoEmail } = req.body;
+
+  if (!novoEmail) {
+    return res.status(400).json({
+      erro: "Informe o novo e-mail"
+    });
+  }
+
+  const emailFormatado = novoEmail.trim().toLowerCase();
+
+  db.query(
+    "SELECT id FROM usuarios WHERE email = ? AND id <> ?",
+    [emailFormatado, usuarioId],
+    (err, results) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({
+          erro: "Erro ao verificar e-mail"
+        });
+      }
+
+      if (results.length > 0) {
+        return res.status(409).json({
+          erro: "Este e-mail já está em uso"
+        });
+      }
+
+      db.query(
+        "UPDATE usuarios SET email = ? WHERE id = ?",
+        [emailFormatado, usuarioId],
+        (err2, result) => {
+          if (err2) {
+            console.error(err2);
+            return res.status(500).json({
+              erro: "Erro ao alterar e-mail"
+            });
+          }
+
+          if (result.affectedRows === 0) {
+            return res.status(404).json({
+              erro: "Usuário não encontrado"
+            });
+          }
+
+          res.json({
+            mensagem: "E-mail alterado com sucesso",
+            email: emailFormatado
+          });
+        }
+      );
+    }
+  );
+};
 
 module.exports = {
   register,
@@ -432,6 +487,7 @@ module.exports = {
   buscarPerfil,
   atualizarPerfil,
   alterarSenha,
+  alterarEmail,
   excluirConta,
   buscarExerciciosExternos
 };

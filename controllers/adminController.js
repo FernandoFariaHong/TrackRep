@@ -28,7 +28,7 @@ const dashboard = (req, res) => {
 
       db.query(
         `
-        SELECT id, nome, email
+        SELECT id, nome, email, is_admin
         FROM usuarios
         ORDER BY id DESC
         `,
@@ -179,6 +179,8 @@ const excluirUsuario = (req, res) => {
     }
   );
 };
+
+
 
 module.exports = {
   dashboard,

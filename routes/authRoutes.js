@@ -1,7 +1,7 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-const authMiddleware = require('../middlewares/authMiddleware');
+const authMiddleware = require("../middlewares/authMiddleware");
 
 const {
   register,
@@ -9,35 +9,47 @@ const {
   buscarPerfil,
   atualizarPerfil,
   alterarSenha,
+  alterarEmail,
   excluirConta,
-  buscarExerciciosExternos
-} = require('../controllers/authController');
+  buscarExerciciosExternos,
+} = require("../controllers/authController");
 
 // Cadastro
-router.post('/register', register);
+router.post("/register", register);
 
 // Login
-router.post('/login', login);
+router.post("/login", login);
 
 // Buscar perfil do usuário
-router.get('/perfil', authMiddleware, buscarPerfil);
+router.get("/perfil", authMiddleware, buscarPerfil);
 
 // Atualizar perfil do usuário
-router.put('/perfil', authMiddleware, atualizarPerfil);
+router.put("/perfil", authMiddleware, atualizarPerfil);
 
 // Buscar exercícios em API externa
-router.get('/api/exercicios', authMiddleware, buscarExerciciosExternos);
+router.get(
+  "/api/exercicios",
+  authMiddleware,
+  buscarExerciciosExternos
+);
 
 // Alterar senha do usuário
 router.put(
-  '/usuarios/alterar-senha',
+  "/usuarios/alterar-senha",
   authMiddleware,
   alterarSenha
 );
 
+// Alterar e-mail do usuário
+router.put(
+  "/usuarios/alterar-email",
+  authMiddleware,
+  alterarEmail
+);
+
 // Excluir conta
 router.delete(
-  '/usuarios/minha-conta',
+  "/usuarios/minha-conta",
   authMiddleware,
   excluirConta
 );
