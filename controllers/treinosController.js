@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { calcularResumoTreino } = require('../utils/treinoUtils');
 
 const listarTreinos = (req, res) => {
   const usuarioId = req.user.id;
@@ -108,18 +109,7 @@ const salvarSessaoTreino = (req, res) => {
     return res.status(400).json({ erro: 'Nenhum exercício enviado' });
   }
 
-  let volumeTotal = 0;
-  let totalSeries = 0;
-
-  exercicios.forEach((exercicio) => {
-    exercicio.series.forEach((serie) => {
-      const carga = Number(serie.carga) || 0;
-      const reps = Number(serie.reps) || 0;
-
-      volumeTotal += carga * reps;
-      totalSeries += 1;
-    });
-  });
+  const { volumeTotal, totalSeries } = calcularResumoTreino(exercicios);
 
   const sqlSessao = `
     INSERT INTO sessoes_treino
@@ -141,7 +131,9 @@ const salvarSessaoTreino = (req, res) => {
       const valoresSeries = [];
 
       exercicios.forEach((exercicio) => {
-        exercicio.series.forEach((serie, index) => {
+        const series = Array.isArray(exercicio.series) ? exercicio.series : [];
+
+        series.forEach((serie, index) => {
           valoresSeries.push([
             sessaoId,
             exercicio.nome,

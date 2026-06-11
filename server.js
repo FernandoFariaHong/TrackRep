@@ -1,9 +1,13 @@
+require("dotenv").config();
+
 const express = require('express');
 const cors = require('cors');
 const treinosRoutes = require('./routes/treinosRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require("./routes/adminRoutes");
 console.log("IMPORT ADMIN ROUTES OK");
+
+
 
 const app = express();
 
