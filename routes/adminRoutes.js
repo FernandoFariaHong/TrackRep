@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-console.log("ADMIN ROUTES CARREGADO");
+
 
 const authMiddleware = require("../middlewares/authMiddleware");
 const adminMiddleware = require("../middlewares/adminMiddleware");
