@@ -12,6 +12,7 @@ const {
   alterarEmail,
   excluirConta,
   buscarExerciciosExternos,
+  buscarHistoricoCorporal,
 } = require("../controllers/authController");
 
 // Cadastro
@@ -45,6 +46,13 @@ router.put(
   "/usuarios/alterar-email",
   authMiddleware,
   alterarEmail
+);
+
+//Histórico Corporal
+router.get(
+  "/perfil/historico",
+  authMiddleware,
+  buscarHistoricoCorporal
 );
 
 // Excluir conta

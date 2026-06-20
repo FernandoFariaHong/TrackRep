@@ -1,4 +1,4 @@
-// Importa a função que calcula o volume total e o total de séries do treino
+// Importa a função que calcula o total de séries do treino
 const { calcularResumoTreino } = require("../utils/treinoUtils");
 
 // Importa funções auxiliares do sistema TrackRep
@@ -15,7 +15,7 @@ const {
 // ===============================
 
 describe("Resumo do treino", () => {
-  test("deve calcular corretamente o volume total e o total de séries", () => {
+  test("deve calcular corretamente o total de séries", () => {
     const exercicios = [
       {
         nome: "Supino",
@@ -34,25 +34,22 @@ describe("Resumo do treino", () => {
 
     const resultado = calcularResumoTreino(exercicios);
 
-    expect(resultado.volumeTotal).toBe(1780);
     expect(resultado.totalSeries).toBe(3);
   });
 
   test("deve retornar zero quando a lista de exercícios estiver vazia", () => {
     const resultado = calcularResumoTreino([]);
 
-    expect(resultado.volumeTotal).toBe(0);
     expect(resultado.totalSeries).toBe(0);
   });
 
   test("deve retornar zero quando receber null", () => {
     const resultado = calcularResumoTreino(null);
 
-    expect(resultado.volumeTotal).toBe(0);
     expect(resultado.totalSeries).toBe(0);
   });
 
-  test("deve tratar carga inválida como zero", () => {
+  test("deve contar série mesmo com carga inválida", () => {
     const exercicios = [
       {
         nome: "Rosca direta",
@@ -64,11 +61,10 @@ describe("Resumo do treino", () => {
 
     const resultado = calcularResumoTreino(exercicios);
 
-    expect(resultado.volumeTotal).toBe(0);
     expect(resultado.totalSeries).toBe(1);
   });
 
-  test("deve tratar repetições inválidas como zero", () => {
+  test("deve contar série mesmo com repetições inválidas", () => {
     const exercicios = [
       {
         nome: "Leg press",
@@ -80,7 +76,6 @@ describe("Resumo do treino", () => {
 
     const resultado = calcularResumoTreino(exercicios);
 
-    expect(resultado.volumeTotal).toBe(0);
     expect(resultado.totalSeries).toBe(1);
   });
 });

@@ -260,16 +260,16 @@ describe("authController", () => {
                 expect.any(Function)
             );
 
-           expect(jwt.sign).toHaveBeenCalledWith(
-  {
-    id: usuario.id,
-    email: usuario.email
-  },
-  expect.any(String),
-  {
-    expiresIn: "1h"
-  }
-);
+            expect(jwt.sign).toHaveBeenCalledWith(
+                {
+                    id: usuario.id,
+                    email: usuario.email
+                },
+                expect.any(String),
+                {
+                    expiresIn: "1h"
+                }
+            );
 
             expect(res.json).toHaveBeenCalledWith({
                 mensagem: "Login realizado com sucesso",

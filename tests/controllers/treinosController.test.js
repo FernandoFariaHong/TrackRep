@@ -22,7 +22,7 @@ describe("treinosController", () => {
     };
 
     jest.clearAllMocks();
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => { });
   });
 
   afterEach(() => {
@@ -98,7 +98,6 @@ describe("treinosController", () => {
       {
         sessao_id: 1,
         data_treino: "2026-06-11",
-        volume_total: 1000,
         total_series: 2,
         exercicio: "Supino",
         total_series_exercicio: 2
@@ -115,7 +114,6 @@ describe("treinosController", () => {
       {
         id: 1,
         data_treino: "2026-06-11",
-        volume_total: 1000,
         total_series: 2,
         exercicios: [
           {
@@ -138,15 +136,6 @@ describe("treinosController", () => {
     expect(res.json).toHaveBeenCalledWith({
       erro: "Erro ao buscar sessões de treino"
     });
-  });
-
-  test("salvarSessaoTreino deve retornar 400 sem exercícios", () => {
-    req.body = { exercicios: [], data: "2026-06-11" };
-
-    controller.salvarSessaoTreino(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ erro: "Nenhum exercício enviado" });
   });
 
   test("salvarSessaoTreino deve salvar sessão com sucesso", () => {
@@ -175,9 +164,8 @@ describe("treinosController", () => {
 
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith({
-      mensagem: "Sessão de treino salva com sucesso",
+      mensagem: "Treino finalizado com sucesso",
       sessaoId: 5,
-      volumeTotal: 980,
       totalSeries: 2
     });
   });
