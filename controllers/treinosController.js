@@ -25,6 +25,7 @@ const listarSessoesTreino = (req, res) => {
       s.id AS sessao_id,
       s.data_treino,
       s.total_series,
+      s.duracao_segundos,
       st.exercicio,
       st.numero_serie,
       st.carga,
@@ -51,6 +52,7 @@ const listarSessoesTreino = (req, res) => {
           id: linha.sessao_id,
           data_treino: linha.data_treino,
           total_series: linha.total_series,
+          duracao_segundos: linha.duracao_segundos,
           exercicios: [],
         };
       }
@@ -113,7 +115,7 @@ const cadastrarTreino = (req, res) => {
 
 const salvarSessaoTreino = (req, res) => {
   const usuarioId = req.user.id;
-  const { exercicios, data } = req.body;
+  const { exercicios, data, duracao_segundos } = req.body;
 
   if (!data) {
     return res.status(400).json({ erro: "Informe a data do treino" });
@@ -163,52 +165,58 @@ const salvarSessaoTreino = (req, res) => {
     return total + exercicio.series.length;
   }, 0);
 
+  const duracaoSegundosFinal = Number(duracao_segundos) || 0;
+
   const sqlSessao = `
-    INSERT INTO sessoes_treino
-    (usuario_id, data_treino, total_series)
-    VALUES (?, ?, ?)
-  `;
+  INSERT INTO sessoes_treino
+  (usuario_id, data_treino, total_series, duracao_segundos)
+  VALUES (?, ?, ?, ?)
+`;
 
-  db.query(sqlSessao, [usuarioId, data, totalSeries], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ erro: "Erro ao salvar sessão de treino" });
-    }
+  db.query(
+    sqlSessao,
+    [usuarioId, data, totalSeries, duracaoSegundosFinal],
+    (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ erro: "Erro ao salvar sessão de treino" });
+      }
 
-    const sessaoId = result.insertId;
-    const valoresSeries = [];
+      const sessaoId = result.insertId;
+      const valoresSeries = [];
 
-    exercicios.forEach((exercicio) => {
-      exercicio.series.forEach((serie, index) => {
-        valoresSeries.push([
-          sessaoId,
-          exercicio.nome.trim(),
-          index + 1,
-          Number(serie.carga),
-          Number(serie.reps),
-        ]);
+      exercicios.forEach((exercicio) => {
+        exercicio.series.forEach((serie, index) => {
+          valoresSeries.push([
+            sessaoId,
+            exercicio.nome.trim(),
+            index + 1,
+            Number(serie.carga),
+            Number(serie.reps),
+          ]);
+        });
       });
-    });
 
-    const sqlSeries = `
+      const sqlSeries = `
       INSERT INTO series_treino
       (sessao_id, exercicio, numero_serie, carga, repeticoes)
       VALUES ?
     `;
 
-    db.query(sqlSeries, [valoresSeries], (errSeries) => {
-      if (errSeries) {
-        console.error(errSeries);
-        return res.status(500).json({ erro: "Erro ao salvar séries do treino" });
-      }
+      db.query(sqlSeries, [valoresSeries], (errSeries) => {
+        if (errSeries) {
+          console.error(errSeries);
+          return res.status(500).json({ erro: "Erro ao salvar séries do treino" });
+        }
 
-      res.status(201).json({
-        mensagem: "Treino finalizado com sucesso",
-        sessaoId,
-        totalSeries,
+        res.status(201).json({
+          mensagem: "Treino finalizado com sucesso",
+          sessaoId,
+          totalSeries,
+          duracao_segundos: duracaoSegundosFinal,
+        });
       });
     });
-  });
 };
 
 const deletarTreino = (req, res) => {

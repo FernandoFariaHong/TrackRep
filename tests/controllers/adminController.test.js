@@ -1,7 +1,7 @@
 const db = require("../../config/db");
 
 jest.mock("../../config/db", () => ({
-  query: jest.fn()
+  query: jest.fn(),
 }));
 
 const { dashboard, excluirUsuario } = require("../../controllers/adminController");
@@ -13,12 +13,12 @@ describe("adminController", () => {
     req = {
       user: { id: 1 },
       params: {},
-      query: {}
+      query: {},
     };
 
     res = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn()
+      json: jest.fn(),
     };
 
     jest.clearAllMocks();
@@ -30,8 +30,6 @@ describe("adminController", () => {
   });
 
   test("dashboard deve retornar dados sem filtro", () => {
-    req.query = {};
-
     db.query
       .mockImplementationOnce((sql, params, callback) => {
         callback(null, [
@@ -39,15 +37,28 @@ describe("adminController", () => {
             totalUsuarios: 2,
             totalTreinos: 5,
             treinosHoje: 1,
-            volumeTotal: 1000
-          }
+          },
         ]);
       })
       .mockImplementationOnce((sql, callback) => {
-        callback(null, [{ id: 1, nome: "Admin", email: "admin@email.com", is_admin: 1 }]);
+        callback(null, [
+          {
+            id: 1,
+            nome: "Admin",
+            email: "admin@email.com",
+            is_admin: 1,
+          },
+        ]);
       })
       .mockImplementationOnce((sql, params, callback) => {
-        callback(null, [{ id: 1, nome: "Fernando", volume_total: 500 }]);
+        callback(null, [
+          {
+            id: 1,
+            nome: "Fernando",
+            data_treino: "2026-06-11",
+            total_series: 3,
+          },
+        ]);
       });
 
     dashboard(req, res);
@@ -56,9 +67,22 @@ describe("adminController", () => {
       totalUsuarios: 2,
       totalTreinos: 5,
       treinosHoje: 1,
-      volumeTotal: 1000,
-      usuarios: [{ id: 1, nome: "Admin", email: "admin@email.com", is_admin: 1 }],
-      treinos: [{ id: 1, nome: "Fernando", volume_total: 500 }]
+      usuarios: [
+        {
+          id: 1,
+          nome: "Admin",
+          email: "admin@email.com",
+          is_admin: 1,
+        },
+      ],
+      treinos: [
+        {
+          id: 1,
+          nome: "Fernando",
+          data_treino: "2026-06-11",
+          total_series: 3,
+        },
+      ],
     });
   });
 
@@ -70,13 +94,21 @@ describe("adminController", () => {
     dashboard(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ erro: "Erro ao buscar dados gerais" });
+    expect(res.json).toHaveBeenCalledWith({
+      erro: "Erro ao buscar dados gerais",
+    });
   });
 
   test("dashboard deve retornar erro ao buscar usuários", () => {
     db.query
       .mockImplementationOnce((sql, params, callback) => {
-        callback(null, [{ totalUsuarios: 1, totalTreinos: 1, treinosHoje: 1, volumeTotal: 1 }]);
+        callback(null, [
+          {
+            totalUsuarios: 1,
+            totalTreinos: 1,
+            treinosHoje: 1,
+          },
+        ]);
       })
       .mockImplementationOnce((sql, callback) => {
         callback(new Error("Erro"), null);
@@ -85,13 +117,21 @@ describe("adminController", () => {
     dashboard(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ erro: "Erro ao buscar usuários" });
+    expect(res.json).toHaveBeenCalledWith({
+      erro: "Erro ao buscar usuários",
+    });
   });
 
   test("dashboard deve retornar erro ao buscar treinos", () => {
     db.query
       .mockImplementationOnce((sql, params, callback) => {
-        callback(null, [{ totalUsuarios: 1, totalTreinos: 1, treinosHoje: 1, volumeTotal: 1 }]);
+        callback(null, [
+          {
+            totalUsuarios: 1,
+            totalTreinos: 1,
+            treinosHoje: 1,
+          },
+        ]);
       })
       .mockImplementationOnce((sql, callback) => {
         callback(null, []);
@@ -103,7 +143,9 @@ describe("adminController", () => {
     dashboard(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ erro: "Erro ao buscar treinos" });
+    expect(res.json).toHaveBeenCalledWith({
+      erro: "Erro ao buscar treinos",
+    });
   });
 
   test("excluirUsuario deve bloquear exclusão da própria conta", () => {
@@ -155,16 +197,20 @@ describe("adminController", () => {
     req.params.id = 2;
 
     db.query
-      .mockImplementationOnce((sql, params, callback) => callback(null, [{ is_admin: 0 }]))
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(null, [{ is_admin: 0 }])
+      )
       .mockImplementationOnce((sql, params, callback) => callback(null))
       .mockImplementationOnce((sql, params, callback) => callback(null))
       .mockImplementationOnce((sql, params, callback) => callback(null))
-      .mockImplementationOnce((sql, params, callback) => callback(null, { affectedRows: 1 }));
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(null, { affectedRows: 1 })
+      );
 
     excluirUsuario(req, res);
 
     expect(res.json).toHaveBeenCalledWith({
-      mensagem: "Usuário excluído com sucesso."
+      mensagem: "Usuário excluído com sucesso.",
     });
   });
 
@@ -172,8 +218,12 @@ describe("adminController", () => {
     req.params.id = 2;
 
     db.query
-      .mockImplementationOnce((sql, params, callback) => callback(null, [{ is_admin: 0 }]))
-      .mockImplementationOnce((sql, params, callback) => callback(new Error("Erro")));
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(null, [{ is_admin: 0 }])
+      )
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(new Error("Erro"))
+      );
 
     excluirUsuario(req, res);
 
@@ -184,9 +234,13 @@ describe("adminController", () => {
     req.params.id = 2;
 
     db.query
-      .mockImplementationOnce((sql, params, callback) => callback(null, [{ is_admin: 0 }]))
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(null, [{ is_admin: 0 }])
+      )
       .mockImplementationOnce((sql, params, callback) => callback(null))
-      .mockImplementationOnce((sql, params, callback) => callback(new Error("Erro")));
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(new Error("Erro"))
+      );
 
     excluirUsuario(req, res);
 
@@ -197,10 +251,14 @@ describe("adminController", () => {
     req.params.id = 2;
 
     db.query
-      .mockImplementationOnce((sql, params, callback) => callback(null, [{ is_admin: 0 }]))
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(null, [{ is_admin: 0 }])
+      )
       .mockImplementationOnce((sql, params, callback) => callback(null))
       .mockImplementationOnce((sql, params, callback) => callback(null))
-      .mockImplementationOnce((sql, params, callback) => callback(new Error("Erro")));
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(new Error("Erro"))
+      );
 
     excluirUsuario(req, res);
 
@@ -211,11 +269,15 @@ describe("adminController", () => {
     req.params.id = 2;
 
     db.query
-      .mockImplementationOnce((sql, params, callback) => callback(null, [{ is_admin: 0 }]))
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(null, [{ is_admin: 0 }])
+      )
       .mockImplementationOnce((sql, params, callback) => callback(null))
       .mockImplementationOnce((sql, params, callback) => callback(null))
       .mockImplementationOnce((sql, params, callback) => callback(null))
-      .mockImplementationOnce((sql, params, callback) => callback(new Error("Erro"), null));
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(new Error("Erro"), null)
+      );
 
     excluirUsuario(req, res);
 
@@ -226,11 +288,15 @@ describe("adminController", () => {
     req.params.id = 2;
 
     db.query
-      .mockImplementationOnce((sql, params, callback) => callback(null, [{ is_admin: 0 }]))
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(null, [{ is_admin: 0 }])
+      )
       .mockImplementationOnce((sql, params, callback) => callback(null))
       .mockImplementationOnce((sql, params, callback) => callback(null))
       .mockImplementationOnce((sql, params, callback) => callback(null))
-      .mockImplementationOnce((sql, params, callback) => callback(null, { affectedRows: 0 }));
+      .mockImplementationOnce((sql, params, callback) =>
+        callback(null, { affectedRows: 0 })
+      );
 
     excluirUsuario(req, res);
 
